@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulir Pengajuan Uji Kompetensi Mandiri LSP Klining Servis</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- jsPDF and html2canvas CDN for PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        /* Custom CSS for A4 print layout and form elements */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5;
+        }
+        .container-a4 {
+            width: 210mm; /* A4 width */
+            min-height: 297mm; /* A4 height */
+            margin: 0 auto;
+            background-color: white;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+            padding: 15mm 20mm; /* Adjusted padding for A4 */
+            box-sizing: border-box; /* Include padding in the width/height */
+            display: flex;
+            flex-direction: column;
+            font-size: 0.75rem; /* Base font size adjusted for A4 density */
+            line-height: 1.25; /* Adjusted line height */
+        }
+        .content-area {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between; /* Distribute space vertically */
+        }
+        @media print {
+            body {
+                background-color: white;
+            }
+            .container-a4 {
+                width: auto;
+                min-height: auto;
+                margin: 0;
+                box-shadow: none;
+                padding: 0; /* Let browser handle print margins */
+                display: block; /* For printing, disable flex to avoid layout issues */
+                font-size: 0.75rem; /* Ensure print uses the same font size */
+                line-height: 1.25;
+            }
+            /* Hide buttons and file upload input when printing */
+            .no-print {
+                display: none !important;
+            }
+            /* Hide actual inputs/selects and show display spans for PDF */
+            .pdf-input {
+                display: none !important;
+            }
+            .pdf-display-text {
+                display: inline !important; /* Show the text in PDF */
+                white-space: normal; /* Allow text to wrap */
+                word-break: break-word; /* Break long words */
+            }
+            /* For radio buttons, ensure only selected text appears */
+            input[type="radio"] {
+                display: none !important;
+            }
+            input[type="radio"] + span {
+                display: none;
+            }
+            input[type="radio"]:checked + span {
+                display: inline !important; /* Show only selected radio text */
+            }
+            /* Hide the "(coret yang tidak perlu)" text */
+            .italic.text-xs {
+                display: none;
+            }
+            .signature-box .no-print-hide {
+                display: none !important;
+            }
+            .signature-box .signature-image {
+                display: block !important; /* Ensure image is visible in print */
+            }
+            .signature-box .text-gray-400.text-xs {
+                display: none !important; /* Hide placeholder text in print */
+            }
+            /* Hide empty table rows for printing */
+            .table-row-hidden {
+                display: none !important;
+            }
+        }
+        /* Adjusted form element styles for smaller size */
+        .form-label {
+            @apply block text-xs font-medium text-gray-700 mb-0.5;
+        }
+        .form-input, .form-textarea, .form-select {
+            @apply block w-full px-1 py-0.5 border border-gray-300 rounded-sm shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-xs;
+            line-height: normal; /* Ensure single line height for inputs */
+        }
+        .table-header {
+            @apply px-1 py-0.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider;
+        }
+        .table-data {
+            @apply px-1 py-0.5 whitespace-nowrap text-xs text-gray-900;
+        }
+        .signature-box {
+            position: relative; /* For absolute positioning of file input */
+            border-bottom: 1px solid #ccc;
+            height: 60px; /* Reduced space for signature */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden; /* Hide overflow for uploaded image */
+        }
+        .signature-image {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        /* Ensure signature file input is hidden for PDF but accessible */
+        #kepala_tuk_signature_upload {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+            z-index: 10; /* Ensure it's on top for clicks */
+        }
+        .header-title {
+            font-size: 1.1rem; /* Slightly larger for titles */
+            font-weight: bold;
+        }
+        .sub-header-title {
+            font-size: 1rem; /* Slightly larger for sub-titles */
+            font-weight: 600;
+        }
+        /* Adjust spacing for dense layout */
+        .mb-adjust {
+            margin-bottom: 0.4rem;
+        }
+        .py-adjust {
+            padding-top: 0.2rem;
+            padding-bottom: 0.2rem;
+        }
+    </style>
+</head>
+<body class="p-4">
+    <div id="form-container" class="container-a4 mx-auto bg-white rounded-lg mt-8 mb-8">
+        <!-- Header with Logo -->
+        <div class="text-center mb-adjust flex flex-col items-center">
+            <img src="https://firebasestorage.googleapis.com/v0/b/generative-ai-document-stack.appspot.com/o/IMG_20240721_114128-removebg-preview.png-34005954-1be8-4485-aadf-06f4137f4d53?alt=media&token=c1e13e00-2f16-43a0-8a7e-c85243171353" class="h-16 mb-2" alt="LSP Klining Servis Logo">
+            <h1 class="header-title text-gray-800 mb-0">FORMULIR PENGAJUAN UJI KOMPETENSI MANDIRI</h1>
+            <h2 class="sub-header-title text-gray-700 mb-adjust">LSP KLINING SERVIS</h2>
+        </div>
+
+        <div class="content-area">
+            <div>
+                <!-- Perihal Section -->
+                <div class="mb-adjust text-xs">
+                    <p><span class="inline-block w-20">Perihal</span>: PENGAJUAN UJI KOMPETENSI MANDIRI</p>
+                    <div class="flex items-center mt-0.5">
+                        <label for="no_pengajuan" class="inline-block w-20">No. Pengajuan</label>
+                        <span class="mr-1">:</span>
+                        <input type="text" id="no_pengajuan" name="no_pengajuan" class="form-input flex-grow pdf-input" placeholder="Contoh: 001/TUK/LSP-KS/VII/2025">
+                        <span id="no_pengajuan_display" class="pdf-display-text hidden"></span>
+                    </div>
+                </div>
+
+                <!-- Kepada Yth. -->
+                <div class="mb-adjust text-xs">
+                    <p>Kepada Yth.</p>
+                    <p class="ml-4">Sekretariat LSP Klining Servis</p>
+                    <p class="ml-4">Di Jakarta</p>
+                    <p class="mt-1">Dengan Hormat,</p>
+                </div>
+
+                <!-- Data Yang Bertanda Tangan -->
+                <div class="mb-adjust text-xs">
+                    <p>Yang bertanda tangan di bawah ini</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4">
+                        <div class="flex items-center">
+                            <label for="nama_pemohon" class="inline-block w-16">Nama</label>
+                            <span class="mr-1">:</span>
+                            <input type="text" id="nama_pemohon" name="nama_pemohon" class="form-input flex-grow pdf-input" placeholder="Masukkan Nama Anda">
+                            <span id="nama_pemohon_display" class="pdf-display-text hidden"></span>
+                        </div>
+                        <div class="flex items-center">
+                            <label for="tuk_pemohon" class="inline-block w-16">TUK</label>
+                            <span class="mr-1">:</span>
+                            <input type="text" id="tuk_pemohon" name="tuk_pemohon" class="form-input flex-grow pdf-input" placeholder="Masukkan Nama TUK">
+                            <span id="tuk_pemohon_display" class="pdf-display-text hidden"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Detail Perusahaan -->
+                <div class="mb-adjust text-xs">
+                    <p>Menyampaikan bahwa,</p>
+                    <div class="flex items-center mb-1">
+                        <label for="nama_pt" class="inline-block w-12">PT.</label>
+                        <input type="text" id="nama_pt" name="nama_pt" class="form-input flex-grow pdf-input" placeholder="Masukkan Nama PT">
+                        <span id="nama_pt_display" class="pdf-display-text hidden"></span>
+                    </div>
+                    <div class="flex items-start">
+                        <label for="alamat_pt" class="inline-block w-12 mt-1">Alamat</label>
+                        <textarea id="alamat_pt" name="alamat_pt" rows="1" class="form-textarea flex-grow pdf-input" placeholder="Masukkan Alamat PT"></textarea>
+                        <span id="alamat_pt_display" class="pdf-display-text hidden"></span>
+                    </div>
+                    <p class="mt-1">telah mengajukan permohonan Uji Kompetensi Mandiri, bagi karyawan-karyawannya.</p>
+                </div>
+
+                <!-- Detail Uji Kompetensi -->
+                <div class="mb-adjust text-xs">
+                    <div class="flex items-center mb-1">
+                        <label for="jumlah_asesi_angka" class="inline-block w-24">Jumlah Asesi</label>
+                        <span class="mr-1">:</span>
+                        <input type="number" id="jumlah_asesi_angka" name="jumlah_asesi_angka" class="form-input w-12 text-center pdf-input" placeholder="Angka" min="0">
+                        <span id="jumlah_asesi_angka_display" class="pdf-display-text hidden"></span>
+                        <span class="ml-1 mr-1">(</span>
+                        <input type="text" id="jumlah_asesi_terbilang" name="jumlah_asesi_terbilang" class="form-input flex-grow pdf-input" placeholder="Terbilang">
+                        <span id="jumlah_asesi_terbilang_display" class="pdf-display-text hidden"></span>
+                        <span class="ml-1">) orang</span>
+                    </div>
+
+                    <div class="flex items-center mb-1">
+                        <label class="inline-block w-24">Di TUK</label>
+                        <span class="mr-1">:</span>
+                        <div class="flex items-center space-x-2">
+                            <label class="inline-flex items-center">
+                                <input type="radio" name="tuk_type" value="Mandiri" class="form-radio text-blue-600 rounded-full" checked>
+                                <span class="ml-1 text-gray-700">Mandiri</span>
+                            </label>
+                            <label class="inline-flex items-center">
+                                <input type="radio" name="tuk_type" value="Sewaktu" class="form-radio text-blue-600 rounded-full">
+                                <span class="ml-1 text-gray-700">Sewaktu</span>
+                            </label>
+                            <label class="inline-flex items-center">
+                                <input type="radio" name="tuk_type" value="Tempat Kerja" class="form-radio text-blue-600 rounded-full">
+                                <span class="ml-1 text-gray-700">Tempat Kerja</span>
+                            </label>
+                            <span class="text-gray-500 text-xs italic">(coret yang tidak perlu)</span>
+                        </div>
+                    </div>
+
+                    <div class="mb-adjust flex flex-col">
+                        <label class="inline-block w-32">Rekomendasi Asesor Penguji</label>
+                        <div class="grid grid-cols-2 gap-x-4">
+                            <div class="flex items-center"><span class="mr-1">: 1.</span><input type="text" name="asesor[]" class="form-input flex-grow pdf-input" id="asesor_1"><span id="asesor_1_display" class="pdf-display-text hidden"></span></div>
+                            <div class="flex items-center"><span class="mr-1">3.</span><input type="text" name="asesor[]" class="form-input flex-grow pdf-input" id="asesor_3"><span id="asesor_3_display" class="pdf-display-text hidden"></span></div>
+                            <div class="flex items-center"><span class="mr-1">: 2.</span><input type="text" name="asesor[]" class="form-input flex-grow pdf-input" id="asesor_2"><span id="asesor_2_display" class="pdf-display-text hidden"></span></div>
+                            <div class="flex items-center"><span class="mr-1">4.</span><input type="text" name="asesor[]" class="form-input flex-grow pdf-input" id="asesor_4"><span id="asesor_4_display" class="pdf-display-text hidden"></span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabel Skema -->
+                <div class="mb-adjust overflow-x-auto text-xs border border-gray-200">
+                    <table class="min-w-full divide-y divide-gray-200" id="skema-table">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="table-header w-1/5">SKEMA</th>
+                                <th scope="col" class="table-header w-1/12">JML. ASESI</th>
+                                <th scope="col" class="table-header w-1/12">TGL. UJI</th>
+                                <th scope="col" class="table-header w-1/12">METODE</th>
+                                <th scope="col" class="table-header w-1/5">SKEMA</th>
+                                <th scope="col" class="table-header w-1/12">JML. ASESI</th>
+                                <th scope="col" class="table-header w-1/12">TGL. UJI</th>
+                                <th scope="col" class="table-header w-1/12">METODE</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <!-- Row 1 -->
+                            <tr data-skema-id="1">
+                                <td class="table-data">1. KLINER JUNIOR</td>
+                                <td class="table-data">
+                                    <input type="number" name="jumlah_asesi_skema_1" class="form-input w-10 pdf-input" min="0">
+                                    <span id="jumlah_asesi_skema_1_display" class="pdf-display-text hidden"></span>
+                                </td>
+                                <td class="table-data">
+                                    <input type="date" name="tanggal_uji_skema_1" class="form-input w-20 pdf-input">
+                                    <span id="tanggal_uji_skema_1_display" class="pdf-display-text hidden"></span>
+                                </td>
+                                <td class="table-data">
+                                    <select name="metode_skema_1" class="form-select w-12 pdf-input">
+                                        <option value="">Pilih</option>
+                                        <option value="L">L</option>
+                                        <option value="TL">TL</option>
+                                    </select>
+                                    <span id="metode_skema_1_display" class="pdf-display-text hidden"></span>
+                                </td>
+                                <td class="table-data">7. PETUGAS KEBERSIHAN TAMAN</td>
+                                <td class="table-data">
+                                    <input type="number" name="jumlah_asesi_skema_7" class="form-input w-10 pdf-input" min="0">
+                                    <span id="jumlah_asesi_skema_7_display" class="pdf-display-text hidden"></span>
+                                </td>
+                                <td class="table-data">
+                                    <input type="date" name="tanggal_uji_skema_7" class="form-input w-20 pdf-input">
+                                    <span id="tanggal_uji_skema_7_display" class="pdf-display-text hidden"></span>
+                                </td>
+                                <td class="table-data">
+                                    <select name="metode_skema_7" class="form-select w-12 pdf-input">
+                                        <option value="">Pilih</option>
+                                        <option value="L">L</option>
+                                        <option value="TL">TL</option>
+                                    </select>
+                                    <span id="metode_skema_7_display" class="pdf-display-text hidden"></span>
+                                </td>
+                            </tr>
+                            <!-- Row 2 -->
+                            <tr data-skema-id="2">
+                                <td class="table-data">2. KLINER SENIOR</td>
+                                <td class="table-data">
+                                    <input type="number" name="jumlah_asesi_skema_2" class="form-input w-10 pdf-input" min="0">
+                                    <span id="jumlah_asesi_skema_2_display" class="pdf-display-text hidden"></span>
+                                </td>
+                                <td class="table-data">
+                                    <input type="date" name="tanggal_uji_skema_2" class="form-input w-20 pdf-input">
+                                    <span id="tanggal_uji_skema_2_display" class="pdf-display-text hidden"></span>
+                                </td>
+                                <td class="table-data">
+                                    <select name="metode_skema_2" class="form-select w-12 pdf-input">
+                                        <option value="">Pilih</option>
+                                        <option value="L">L</option>
+                                        <option value="TL">TL</option>
+                                    </select>
+                                    <span id="metode_skema_2_display" class="pdf-display-text hidden"></span>
+                                </td>
+                                <td class="table-data">8. TEAM LEADER</td>
+                                <td class="table-data">
+                                    <input type="number" name="jumlah_asesi_skema_8" class="form-input w-10 pdf-input" min="0">
+                                    <span id="jumlah_asesi_skema_8_display" class="pdf-display-text hidden"></span>
+                                </td>
+                                <td class="table-data">
+                                    <input type="date" name="tanggal_uji_skema_8" class="form-input w-20 pdf-input">
+                                    <span id="tanggal_uji_skema_8_display" class="pdf-display-text hidden"></span>
+                                </td>
+                                <td class="table-data">
+                                    <select name="metode_skema_8" class="form-select w-12 pdf-input">
+                                        <option value="">Pilih</option>
+                                        <option value="L">L</option>
+                                        <option value="TL">TL</option>
+                                    </select>
+                                    <span id="metode_skema_8_display" class="pdf-display-text hidden"></span>
+                                </td>
+                            </tr>
+                            <!-- Row 3 -->
+                            <tr data-skema-id="3">
+                                <td class="table-data">3. SPESIALIS FASKES</td>
+                                <td class="table-data">
+                                    <input type="number" name="jumlah_asesi_skema_3" class="form-input w-10 pdf-input" min="0">
+                                    <span id="jumlah_asesi_skema_3_display" class="pdf-display-text hidden"></span>
+                                </td>
+                                <td class="table-data">
+                                    <input type="date" name="tanggal_uji_skema_3" class="form-input w-20 pdf-input">
+                                    <span id="tanggal_uji_skema_3_display" class="pdf-display-text hidden"></span>
+                                </td>
+                                <td class="table-data">
+                                    <select name="metode_skema_3" class="form-select w-12 pdf-input">
+                                        <option value="">Pilih</option>
+                                        <option value="L">L</option>
+                                        <option value="TL">TL</option>
+                                    </select>
+                                    <span id="metode_skema_3_display" class="pdf-display-text hidden"></span>
+                                </td>
+                                <td class="table-data">9. SUPERVISOR</td>
+                                <td class="table-data">
+                                    <input type="number" name="jumlah_asesi_skema_9" class="form-input w-10 pdf-input" min="0">
+                                    <span id="jumlah_asesi_skema_9_display" class="pdf-display-text hidden"></span>
+                                </td>
+                                <td class="table-data">
+                                    <input type="date" name="tanggal_uji_skema_9" class="form-input w-20 pdf-input">
+                                    <span id="tanggal_uji_skema_9_display" class="pdf-display-text hidden"></span>
+                                </td>
+                                <td class="table-data">
+                                    <select name="metode_skema_9" class="form-select w-12 pdf-input">
+                                        <option value="">Pilih</option>
+                                        <option value="L">L</option>
+                                        <option value="TL">TL</option>
+                                    </select>
+                                    <span id="metode_skema_9_display" class="pdf-display-text hidden"></span>
+                                </td>
+                            </tr>
+                            <!-- Row 4 -->
+                            <tr data-skema-id="4">
+                                <td class="table-data">4. SPESIALIS DINDING LUAR GEDUNG</td>
+                                <td class="table-data">
+                                    <input type="number" name="jumlah_asesi_skema_4" class="form-input w-10 pdf-input" min="0">
+                                    <span id="jumlah_asesi_skema_4_display" class="pdf-display-text hidden"></span>
+                                </td>
+                                <td class="table-data">
+                                    <input type="date" name="tanggal_uji_skema_4" class="form-input w-20 pdf-input">
+                                    <span id="tanggal_uji_skema_4_display" class="pdf-display-text hidden"></span>
+                                </td>
+                                <td class="table-data">
+                                    <select name="metode_skema_4" class="form-select w-12 pdf-input">
+                                        <option value="">Pilih</option>
+                                        <option value="L">L</option>
+                                        <option value="TL">TL</option>
+                                    </select>
+                                    <span id="metode_skema_4_display" class="pdf-display-text hidden"></span>
+                                </td>
+                                <td class="table-data">10. KOORDINATOR</td>
+                                <td class="table-data">
+                                    <input type="number" name="jumlah_asesi_skema_10" class="form-input w-10 pdf-input" min="0">
+                                    <span id="jumlah_asesi_skema_10_display" class="pdf-display-text hidden"></span>
+                                </td>
+                                <td class="table-data">
+                                    <input type="date" name="tanggal_uji_skema_10" class="form-input w-20 pdf-input">
+                                    <span id="tanggal_uji_skema_10_display" class="pdf-display-text hidden"></span>
+                                </td>
+                                <td class="table-data">
+                                    <select name="metode_skema_10" class="form-select w-12 pdf-input">
+                                        <option value="">Pilih</option>
+                                        <option value="L">L</option>
+                                        <option value="TL">TL</option>
+                                    </select>
+                                    <span id="metode_skema_10_display" class="pdf-display-text hidden"></span>
+                                </td>
+                            </tr>
+                            <!-- Row 5 -->
+                            <tr data-skema-id="5">
+                                <td class="table-data">5. SPESIALIS LANTAI</td>
+                                <td class="table-data">
+                                    <input type="number" name="jumlah_asesi_skema_5" class="form-input w-10 pdf-input" min="0">
+                                    <span id="jumlah_asesi_skema_5_display" class="pdf-display-text hidden"></span>
+                                </td>
+                                <td class="table-data">
+                                    <input type="date" name="tanggal_uji_skema_5" class="form-input w-20 pdf-input">
+                                    <span id="tanggal_uji_skema_5_display" class="pdf-display-text hidden"></span>
+                                </td>
+                                <td class="table-data">
+                                    <select name="metode_skema_5" class="form-select w-12 pdf-input">
+                                        <option value="">Pilih</option>
+                                        <option value="L">L</option>
+                                        <option value="TL">TL</option>
+                                    </select>
+                                    <span id="metode_skema_5_display" class="pdf-display-text hidden"></span>
+                                </td>
+                                <td class="table-data">11. QUALITY CONTROL</td>
+                                <td class="table-data">
+                                    <input type="number" name="jumlah_asesi_skema_11" class="form-input w-10 pdf-input" min="0">
+                                    <span id="jumlah_asesi_skema_11_display" class="pdf-display-text hidden"></span>
+                                </td>
+                                <td class="table-data">
+                                    <input type="date" name="tanggal_uji_skema_11" class="form-input w-20 pdf-input">
+                                    <span id="tanggal_uji_skema_11_display" class="pdf-display-text hidden"></span>
+                                </td>
+                                <td class="table-data">
+                                    <select name="metode_skema_11" class="form-select w-12 pdf-input">
+                                        <option value="">Pilih</option>
+                                        <option value="L">L</option>
+                                        <option value="TL">TL</option>
+                                    </select>
+                                    <span id="metode_skema_11_display" class="pdf-display-text hidden"></span>
+                                </td>
+                            </tr>
+                            <!-- Row 6 -->
+                            <tr data-skema-id="6">
+                                <td class="table-data">6. PRAMUBAKTI</td>
+                                <td class="table-data">
+                                    <input type="number" name="jumlah_asesi_skema_6" class="form-input w-10 pdf-input" min="0">
+                                    <span id="jumlah_asesi_skema_6_display" class="pdf-display-text hidden"></span>
+                                </td>
+                                <td class="table-data">
+                                    <input type="date" name="tanggal_uji_skema_6" class="form-input w-20 pdf-input">
+                                    <span id="tanggal_uji_skema_6_display" class="pdf-display-text hidden"></span>
+                                </td>
+                                <td class="table-data">
+                                    <select name="metode_skema_6" class="form-select w-12 pdf-input">
+                                        <option value="">Pilih</option>
+                                        <option value="L">L</option>
+                                        <option value="TL">TL</option>
+                                    </select>
+                                    <span id="metode_skema_6_display" class="pdf-display-text hidden"></span>
+                                </td>
+                                <td class="table-data">12. MANAJER OPERASIONAL</td>
+                                <td class="table-data">
+                                    <input type="number" name="jumlah_asesi_skema_12" class="form-input w-10 pdf-input" min="0">
+                                    <span id="jumlah_asesi_skema_12_display" class="pdf-display-text hidden"></span>
+                                </td>
+                                <td class="table-data">
+                                    <input type="date" name="tanggal_uji_skema_12" class="form-input w-20 pdf-input">
+                                    <span id="tanggal_uji_skema_12_display" class="pdf-display-text hidden"></span>
+                                </td>
+                                <td class="table-data">
+                                    <select name="metode_skema_12" class="form-select w-12 pdf-input">
+                                        <option value="">Pilih</option>
+                                        <option value="L">L</option>
+                                        <option value="TL">TL</option>
+                                    </select>
+                                    <span id="metode_skema_12_display" class="pdf-display-text hidden"></span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Penutup -->
+                <div class="mb-adjust text-xs">
+                    <p>Untuk itu, dengan ini kami mohon Bapak dapat memfasilitasi Uji Kompetensi Mandiri tersebut. Demikianlah atas perhatian dan kerjasamanya saya ucapkan terima kasih.</p>
+                </div>
+
+                <!-- Pembayaran -->
+                <div class="mb-adjust text-xs border-t pt-1 border-gray-200">
+                    <p class="font-semibold text-gray-800 mb-0.5">PEMBAYARAN DAPAT DI TRANSFER KE :</p>
+                    <ul class="list-disc ml-6 text-gray-700">
+                        <li>BANK BSI - NO REKENING : 8287778720 A.N LEMBAGA SERTIFIKASI PROFESI KLINING SERVIS</li>
+                        <li>BANK BCA - NO REKENING : 8830206001 A.N RT. IIS ISMANIAH</li>
+                    </ul>
+                    <p class="mt-1 font-semibold text-gray-800">BUKTI TRANSFER DAPAT DIKIRIM VIA WHATSAPP.</p>
+                </div>
+            </div>
+
+            <!-- Tanggal dan Tanda Tangan -->
+            <div class="mt-auto pt-2"> <!-- Push this section to the bottom -->
+                <div class="mb-adjust flex flex-col items-end text-xs">
+                    <div class="flex items-center mb-1">
+                        <label for="tempat_tanggal_pengajuan" class="mr-1">Jakarta,</label>
+                        <input type="text" id="tempat_tanggal_pengajuan" name="tempat_tanggal_pengajuan" class="form-input inline-block w-40 pdf-input" placeholder="Tanggal (contoh: 30 Juni 2025)">
+                        <span id="tempat_tanggal_pengajuan_display" class="pdf-display-text hidden"></span>
+                    </div>
+                </div>
+
+                <div class="flex justify-between items-start text-xs">
+                    <div class="text-center w-1/2 pr-2">
+                        <p class="font-semibold text-gray-800 mb-1">Mengetahui/Menyetujui :</p>
+                        <div class="signature-box mt-8">
+                            <!-- Placeholder for signature image if needed for display -->
+                        </div>
+                        <p class="mt-1 font-semibold text-gray-800">Yohanes Legimin</p>
+                        <p class="text-xs text-gray-600">Manager Sertifikasi LSP-KS</p>
+                    </div>
+                    <div class="text-center w-1/2 pl-2">
+                        <p class="font-semibold text-gray-800 mb-1">Hormat saya,</p>
+                        <div class="signature-box mt-8">
+                            <input type="file" id="kepala_tuk_signature_upload" accept="image/*" class="no-print-hide">
+                            <img id="kepala_tuk_signature_preview" class="signature-image hidden" alt="Tanda Tangan Kepala TUK">
+                            <span id="kepala_tuk_signature_placeholder" class="text-gray-400 text-xs">Klik untuk Unggah Tanda Tangan Digital</span>
+                        </div>
+                        <input type="text" id="kepala_tuk_ttd" name="kepala_tuk_ttd" class="form-input block w-full text-center mt-1 pdf-input" placeholder="Nama Kepala TUK">
+                        <span id="kepala_tuk_ttd_display" class="pdf-display-text hidden"></span>
+                    </div>
+                </div>
+
+                <!-- CC Section -->
+                <div class="mt-2 border-t pt-1 border-gray-200 text-xs">
+                    <p>cc. 1. Yth. Direktur LSP-KS.</p>
+                    <p class="ml-4">2. Yth. Manajer Keuangan LSP-KS</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="no-print mt-6 flex flex-col sm:flex-row justify-center space-y-3 sm:space-y-0 sm:space-x-4">
+            <button id="downloadPdf" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105">
+                Unduh Formulir (PDF)
+            </button>
+            <button id="sendWhatsapp" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105">
+                Kirim Notifikasi via WhatsApp
+            </button>
+        </div>
+        <div id="messageBox" class="no-print fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden z-50">
+            <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full text-center">
+                <p id="messageText" class="text-lg font-semibold text-gray-800 mb-4"></p>
+                <button id="closeMessageBox" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        window.jsPDF = window.jspdf.jsPDF; // Assign jsPDF to window object for global access
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const formContainer = document.getElementById('form-container');
+            const downloadPdfBtn = document.getElementById('downloadPdf');
+            const sendWhatsappBtn = document.getElementById('sendWhatsapp');
+            const messageBox = document.getElementById('messageBox');
+            const messageText = document.getElementById('messageText');
+            const closeMessageBox = document.getElementById('closeMessageBox');
+            const kepalaTukSignatureUpload = document.getElementById('kepala_tuk_signature_upload');
+            const kepalaTukSignaturePreview = document.getElementById('kepala_tuk_signature_preview');
+            const kepalaTukSignaturePlaceholder = document.getElementById('kepala_tuk_signature_placeholder');
+            const skemaTableBody = document.querySelector('#skema-table tbody');
+
+            function showMessageBox(message) {
+                messageText.textContent = message;
+                messageBox.classList.remove('hidden');
+            }
+
+            closeMessageBox.addEventListener('click', () => {
+                messageBox.classList.add('hidden');
+            });
+
+            // Handle signature upload
+            kepalaTukSignatureUpload.addEventListener('change', (event) => {
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        kepalaTukSignaturePreview.src = e.target.result;
+                        kepalaTukSignaturePreview.classList.remove('hidden');
+                        kepalaTukSignaturePlaceholder.classList.add('hidden');
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    kepalaTukSignaturePreview.src = '';
+                    kepalaTukSignaturePreview.classList.add('hidden');
+                    kepalaTukSignaturePlaceholder.classList.remove('hidden');
+                }
+            });
+
+            function validateForm() {
+                let errors = [];
+
+                // Validate main required fields
+                const requiredFields = [
+                    { id: 'no_pengajuan', name: 'No. Pengajuan' },
+                    { id: 'nama_pemohon', name: 'Nama Pemohon' },
+                    { id: 'tuk_pemohon', name: 'TUK' },
+                    { id: 'nama_pt', name: 'Nama PT' },
+                    { id: 'alamat_pt', name: 'Alamat PT' },
+                    { id: 'jumlah_asesi_angka', name: 'Jumlah Asesi (Angka)' },
+                    { id: 'jumlah_asesi_terbilang', name: 'Jumlah Asesi (Terbilang)' },
+                    { id: 'tempat_tanggal_pengajuan', name: 'Tempat & Tanggal Pengajuan' },
+                    { id: 'kepala_tuk_ttd', name: 'Nama Kepala TUK' }
+                ];
+
+                requiredFields.forEach(field => {
+                    const input = document.getElementById(field.id);
+                    if (input && input.value.trim() === '') {
+                        errors.push(`- ${field.name} belum terisi.`);
+                    }
+                });
+
+                const jumlahAsesiAngka = document.getElementById('jumlah_asesi_angka');
+                if (jumlahAsesiAngka && parseInt(jumlahAsesiAngka.value) <= 0 && jumlahAsesiAngka.value.trim() !== '') {
+                    errors.push('- Jumlah Asesi harus lebih dari 0.');
+                } else if (jumlahAsesiAngka && jumlahAsesiAngka.value.trim() === '') {
+                    // This case is already covered by requiredFields, but good to be explicit
+                }
+
+
+                // Validate schema table rows
+                const skemaRows = skemaTableBody.querySelectorAll('tr');
+                skemaRows.forEach(row => {
+                    const skemaName = row.querySelector('td:first-child').textContent.trim();
+                    const jumlahAsesiInput = row.querySelector('input[type="number"][name^="jumlah_asesi_skema_"]');
+                    const tanggalUjiInput = row.querySelector('input[type="date"][name^="tanggal_uji_skema_"]');
+                    const metodeSelect = row.querySelector('select[name^="metode_skema_"]');
+
+                    if (jumlahAsesiInput && parseInt(jumlahAsesiInput.value) > 0) {
+                        if (tanggalUjiInput && tanggalUjiInput.value.trim() === '') {
+                            errors.push(`- Tanggal Uji untuk "${skemaName}" belum terisi.`);
+                        }
+                        if (metodeSelect && metodeSelect.value.trim() === '') {
+                            errors.push(`- Metode L/TL untuk "${skemaName}" belum dipilih.`);
+                        }
+                    }
+                });
+
+                if (errors.length > 0) {
+                    showMessageBox('Mohon lengkapi data berikut:\n' + errors.join('\n'));
+                    return false;
+                }
+                return true;
+            }
+
+
+            downloadPdfBtn.addEventListener('click', async () => {
+                if (!validateForm()) {
+                    return; // Stop if validation fails
+                }
+
+                // Prepare inputs for PDF capture
+                const pdfInputs = document.querySelectorAll('.pdf-input');
+                pdfInputs.forEach(input => {
+                    const displaySpan = document.getElementById(input.id + '_display');
+                    if (displaySpan) {
+                        if (input.tagName === 'SELECT') {
+                            displaySpan.textContent = input.options[input.selectedIndex].text;
+                        } else if (input.type === 'date') {
+                            const dateValue = input.value;
+                            if (dateValue) {
+                                const date = new Date(dateValue);
+                                displaySpan.textContent = date.toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
+                            } else {
+                                displaySpan.textContent = '';
+                            }
+                        } else if (input.tagName === 'TEXTAREA') {
+                            displaySpan.textContent = input.value;
+                            // For textarea, ensure it wraps text in PDF
+                            displaySpan.style.whiteSpace = 'pre-wrap'; // Preserve whitespace and wrap
+                        }
+                        else {
+                            displaySpan.textContent = input.value;
+                        }
+                        input.classList.add('hidden'); // Hide input
+                        displaySpan.classList.remove('hidden'); // Show span
+                    }
+                });
+
+                // Temporarily hide elements not meant for PDF
+                const noPrintElements = document.querySelectorAll('.no-print');
+                noPrintElements.forEach(el => el.style.display = 'none');
+
+                // Handle radio buttons - display selected value as text
+                const tukTypeRadios = document.querySelectorAll('input[name="tuk_type"]');
+                tukTypeRadios.forEach((radio) => {
+                    const parentLabel = radio.closest('label');
+                    if (radio.checked) {
+                        parentLabel.style.display = 'inline-flex';
+                        const span = parentLabel.querySelector('span');
+                        if (span) span.textContent = radio.value;
+                    } else {
+                        parentLabel.style.display = 'none';
+                    }
+                });
+
+                // Hide the "(coret yang tidak perlu)" text
+                const coretText = formContainer.querySelector('.text-gray-500.text-xs.italic');
+                if (coretText) {
+                    coretText.style.display = 'none';
+                }
+
+                // Hide empty schema table rows
+                const skemaRows = skemaTableBody.querySelectorAll('tr');
+                skemaRows.forEach(row => {
+                    const jumlahAsesiInput = row.querySelector('input[type="number"][name^="jumlah_asesi_skema_"]');
+                    if (jumlahAsesiInput && (parseInt(jumlahAsesiInput.value) === 0 || jumlahAsesiInput.value.trim() === '')) {
+                        row.classList.add('table-row-hidden'); // Add class to hide for print
+                    }
+                });
+
+                // Ensure signature image is visible for PDF if uploaded, hide placeholder
+                if (kepalaTukSignaturePreview.src) {
+                    kepalaTukSignaturePlaceholder.style.display = 'none';
+                    kepalaTukSignaturePreview.style.display = 'block';
+                } else {
+                    kepalaTukSignaturePreview.style.display = 'none';
+                    kepalaTukSignaturePlaceholder.style.display = 'block';
+                }
+                kepalaTukSignatureUpload.style.display = 'none'; // Hide the file input itself
+
+
+                try {
+                    const canvas = await html2canvas(formContainer, {
+                        scale: 2, // Higher scale for better resolution
+                        useCORS: true,
+                        scrollY: -window.scrollY, // Correct scrolling issue
+                        windowWidth: formContainer.scrollWidth,
+                        windowHeight: formContainer.scrollHeight,
+                        logging: false // Disable logging for cleaner console
+                    });
+
+                    const imgData = canvas.toDataURL('image/png');
+                    const pdf = new jsPDF('p', 'mm', 'a4');
+                    const imgWidth = 210; // A4 width in mm
+                    const pageHeight = 297; // A4 height in mm
+                    const imgHeight = canvas.height * imgWidth / canvas.width;
+                    let heightLeft = imgHeight;
+                    let position = 0;
+
+                    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+
+                    while (heightLeft >= 0) {
+                        position = heightLeft - imgHeight;
+                        pdf.addPage();
+                        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                        heightLeft -= pageHeight;
+                    }
+
+                    pdf.save('Formulir_Pengajuan_Uji_Kompetensi_LSP_KS.pdf');
+                    showMessageBox('Formulir berhasil diunduh sebagai PDF.');
+
+                } catch (error) {
+                    console.error('Error generating PDF:', error);
+                    showMessageBox('Gagal membuat PDF. Pastikan semua elemen terlihat di layar dan coba lagi.');
+                } finally {
+                    // Restore original styles and visibility after PDF generation
+                    noPrintElements.forEach(el => el.style.display = '');
+
+                    // Restore inputs visibility and hide display spans
+                    pdfInputs.forEach(input => {
+                        const displaySpan = document.getElementById(input.id + '_display');
+                        if (displaySpan) {
+                            input.classList.remove('hidden'); // Show input
+                            displaySpan.classList.add('hidden'); // Hide span
+                            displaySpan.style.whiteSpace = ''; // Reset whitespace
+                        }
+                    });
+
+                    // Restore radio button original state
+                    tukTypeRadios.forEach((radio) => {
+                        const parentLabel = radio.closest('label');
+                        parentLabel.style.display = 'inline-flex'; // Restore original display
+                        const span = parentLabel.querySelector('span');
+                        if (span) span.textContent = radio.value; // Restore original text
+                    });
+
+                    if (coretText) {
+                        coretText.style.display = '';
+                    }
+
+                    // Restore schema table rows visibility
+                    skemaRows.forEach(row => {
+                        row.classList.remove('table-row-hidden');
+                    });
+
+                    // Restore signature visibility based on upload state
+                    if (kepalaTukSignaturePreview.src) {
+                        kepalaTukSignaturePlaceholder.style.display = 'none';
+                        kepalaTukSignaturePreview.style.display = 'block';
+                    } else {
+                        kepalaTukSignaturePlaceholder.style.display = 'block';
+                        kepalaTukSignaturePreview.style.display = 'none';
+                    }
+                    kepalaTukSignatureUpload.style.display = 'block'; // Restore file input visibility for user interaction
+                }
+            });
+
+            sendWhatsappBtn.addEventListener('click', () => {
+                if (!validateForm()) {
+                    return; // Stop if validation fails
+                }
+
+                const noPengajuan = document.getElementById('no_pengajuan').value;
+                const namaPemohon = document.getElementById('nama_pemohon').value;
+                const tukPemohon = document.getElementById('tuk_pemohon').value;
+                const namaPt = document.getElementById('nama_pt').value;
+                const alamatPt = document.getElementById('alamat_pt').value;
+                const jumlahAsesiAngka = document.getElementById('jumlah_asesi_angka').value;
+                const jumlahAsesiTerbilang = document.getElementById('jumlah_asesi_terbilang').value;
+                const tempatTanggalPengajuan = document.getElementById('tempat_tanggal_pengajuan').value;
+                const kepalaTukTtd = document.getElementById('kepala_tuk_ttd').value;
+
+                let message = `*Pengajuan Uji Kompetensi Mandiri LSP Klining Servis*\n\n`;
+                message += `No. Pengajuan: ${noPengajuan || '-'}\n`;
+                message += `Nama Pemohon: ${namaPemohon || '-'}\n`;
+                message += `TUK: ${tukPemohon || '-'}\n`;
+                message += `PT: ${namaPt || '-'}\n`;
+                message += `Alamat: ${alamatPt || '-'}\n`;
+                message += `Jumlah Asesi: ${jumlahAsesiAngka || '-'} (${jumlahAsesiTerbilang || '-'}) orang\n`;
+                message += `Tempat & Tanggal Pengajuan: Jakarta, ${tempatTanggalPengajuan || '-'}\n`;
+                message += `Kepala TUK: ${kepalaTukTtd || '-'}\n\n`;
+
+                message += `Mohon segera periksa pengajuan ini dan hubungi kami jika ada pertanyaan.\n`;
+                message += `*Mohon lampirkan bukti transfer dan formulir PDF yang telah diunduh secara manual di chat ini.*`;
+
+                // Generic WhatsApp Web link, prompting user to manually compose/attach
+                const whatsappUrl = `https://web.whatsapp.com/send?text=${encodeURIComponent(message)}`;
+                window.open(whatsappUrl, '_blank');
+                showMessageBox('Anda akan diarahkan ke WhatsApp Web. Mohon tempel pesan yang sudah disiapkan dan lampirkan formulir PDF yang telah diunduh secara manual.');
+            });
+        });
+    </script>
+</body>
+</html>
